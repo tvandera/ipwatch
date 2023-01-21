@@ -118,7 +118,7 @@ easily accomplished by installing *ipwatch* somewhere under your home directory.
 
 ## Configuring sending email
 
-This repo contains an example `ssmtp` config file for sending email.
+This repo contains an example `ssmtp` config file for sending email. See https://wiki.archlinux.org/title/SSMTP for more info.
 
 If you use **2-Step Verification** with Gmail then you'll need configure your Gmail account to **Sign in with App Passwords** which you can learn more about by visiting https://support.google.com/accounts/answer/185833.
 
