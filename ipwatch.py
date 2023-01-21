@@ -91,7 +91,7 @@ def updateoldips(filepath,  new_external_ip, new_local_ip):
         savefile.write(new_local_ip)
 
 #send mail with new IP address
-def sendmail(old_exernal_ip, old_local_ip, new_external_ip, new_local_ip,
+def sendmail(old_external_ip, old_local_ip, new_external_ip, new_local_ip,
         server, receiver_emails,  machine):
     "Function to send an email with the new IP address"
 
@@ -103,7 +103,7 @@ def sendmail(old_exernal_ip, old_local_ip, new_external_ip, new_local_ip,
        New local IP = {new_local_ip}
        The Server queried was {server}""")
 
-    for email in receiver_emails:
+    for email in receiver_emails.split(","):
         subprocess.check_output([ "/usr/bin/mail", "-s", f"new ip: {new_external_ip}", f"{email}"], input=mailbody, text=True)
 
 ################

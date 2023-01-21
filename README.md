@@ -16,7 +16,7 @@ change periodically due to actions by the ISP.
 
 ## Usage
 
- `./ipwatch.py`
+ `./ipwatch.py config.txt`
 
 A `config.txt` file is needed. See below.
 
@@ -61,7 +61,7 @@ ipwatch uses a config file to define how to send an email.  An example and descr
 
 ```dosini
 [DEFAULT]
-# comma delimited lit of the the email addresses of the recipients
+# comma delimited list of the the email addresses of the recipients
 receiver_email=tomreceiver@gmail.com, bobreceiver@gmail.com
 #informative name of the machine
 machine=Test_Machine
