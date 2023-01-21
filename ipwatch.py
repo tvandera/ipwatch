@@ -110,27 +110,35 @@ def sendmail(old_exernal_ip, old_local_ip, new_external_ip, new_local_ip,
 ##### MAIN #####
 ################
 
-#parse arguments
-config = readconfig("config.txt")
+def main():
+    #parse arguments
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config_file")
+    args = parser.parse_args()
 
-old_external_ip, old_local_ip = getoldips(config.save_ip_path)
-curr_external_ip, curr_local_ip, server = getips(config.try_count, config.ip_blacklist)
+    # read config file
+    config = readconfig(args.config_file)
 
-#check to see if the IP address has changed
-if ((curr_external_ip != old_external_ip) or (curr_local_ip != old_local_ip)):
-    #send email
-    print ("Current IP differs from old IP.")
-    sendmail(
-        old_external_ip, old_local_ip,
-        curr_external_ip, curr_local_ip, server,
-        config.receiver_email,
-        config.machine)
+    old_external_ip, old_local_ip = getoldips(config.save_ip_path)
+    curr_external_ip, curr_local_ip, server = getips(config.try_count, config.ip_blacklist)
 
-    # updatefile
-    updateoldips(config.save_ip_path,  curr_external_ip, curr_local_ip)
+    #check to see if the IP address has changed
+    if ((curr_external_ip != old_external_ip) or (curr_local_ip != old_local_ip)):
+        #send email
+        print ("Current IP differs from old IP.")
+        sendmail(
+            old_external_ip, old_local_ip,
+            curr_external_ip, curr_local_ip, server,
+            config.receiver_email,
+            config.machine)
 
-else:
-    print ("Current IP = Old IP.  No need to send email.")
+        # updatefile
+        updateoldips(config.save_ip_path,  curr_external_ip, curr_local_ip)
 
+    else:
+        print ("Current IP = Old IP.  No need to send email.")
 
+if __name__ == "__main__":
+    main()
 
