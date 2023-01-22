@@ -3,6 +3,6 @@ receiver_email=jimmy@gmail.com
 machine=Home NAS
 save_ip_path=saved_ip.txt
 try_count=10
-ip_blacklist=192.168.0.255,192.168.0.1,192.168.1.255,192.168.1.1
+ip_blacklist=192.168.*.*,10.*.*.*
 dry_run=0
 
