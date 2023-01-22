@@ -41,6 +41,8 @@ from sys import version_info
 
 PY3K = version_info >= (3, 0)
 
+SCRIPTDIR = os.path.dirname(__file__)
+
 if PY3K:
     import urllib.request as urllib
     import http.cookiejar as cjar
@@ -66,7 +68,7 @@ class IPgetter(object):
     '''
 
     def __init__(self):
-        JSON_FILENAME = 'serverCache.json'
+        JSON_FILENAME = os.path.join(SCRIPTDIR, 'serverCache.json')
         now           = datetime.now()
         currentTS     = datetime.timestamp(now)
         theList       = None

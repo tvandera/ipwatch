@@ -1,4 +1,4 @@
-#!//usr/bin/env python3
+#!/usr/bin/env python3
 
 #USAGE: python3 ipwatch.py [config]
 #USAGE: ./ipwatch.py [config]
@@ -21,6 +21,8 @@
 
 from pathlib import Path
 import re
+import os
+from fnmatch import fnmatch
 import subprocess
 import ipgetter
 from dataclasses import dataclass
@@ -33,6 +35,7 @@ from collections import namedtuple
 ### CLASSES ####
 ################
 
+SCRIPTDIR = Path(__file__).parent
 
 def readconfig(fname):
     config = ConfigParser()
@@ -51,6 +54,8 @@ def isipaddr(str):
 def getips(try_count, blacklist):
     "Function to return the current, external, IP address"
 
+    blacklist = blacklist.split(',')
+
     #try up to config.try_count servers for an IP
     for counter in range(int(try_count)):
 
@@ -58,20 +63,24 @@ def getips(try_count, blacklist):
         external_ip, local_ip, server = ipgetter.myip()
 
         #check to see that it has a ###.###.###.### format
-        if isipaddr(external_ip) and external_ip not in blacklist:
-            print ("GetIP: Try %d: Good IP: %s" % (counter+1, external_ip))
-            return external_ip, local_ip, server
-
-        if external_ip in blacklist:
-            print ("GetIP: Try %d:  Bad IP (in Blacklist): %s" % (counter+1, external_ip))
-        else:
+        if not isipaddr(external_ip):
             print ("GetIP: Try %d:  Bad IP    (malformed): %s" % (counter+1, external_ip))
+            continue
+        
+        for black_ip in blacklist:
+            if fnmatch(external_ip, black_ip):
+               print ("GetIP: Try %d:  Bad IP (in Blacklist): %s in %s" % (counter+1, external_ip, black_ip))
+               continue
+
+        print ("GetIP: Try %d: Good IP: %s" % (counter+1, external_ip))
+        return external_ip, local_ip, server
 
     raise ValueError("Could not get IPs")
 
 #get old IP address
 def getoldips(filepath):
     "Function to get the old ip address from savefile"
+
     #check if the savefile exists
     if not Path(filepath).is_file():
         return None, None
@@ -114,13 +123,17 @@ def main():
     #parse arguments
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("config_file")
+    parser.add_argument("--config", dest='config_file', default= SCRIPTDIR / "config.txt")
     args = parser.parse_args()
 
     # read config file
+    print("Reading ", args.config_file)
     config = readconfig(args.config_file)
 
-    old_external_ip, old_local_ip = getoldips(config.save_ip_path)
+    save_ip_path = Path(config.save_ip_path)
+    if not save_ip_path.is_absolute(): save_ip_path = SCRIPTDIR / save_ip_path
+
+    old_external_ip, old_local_ip = getoldips(save_ip_path)
     curr_external_ip, curr_local_ip, server = getips(config.try_count, config.ip_blacklist)
 
     #check to see if the IP address has changed
@@ -134,7 +147,7 @@ def main():
             config.machine)
 
         # updatefile
-        updateoldips(config.save_ip_path,  curr_external_ip, curr_local_ip)
+        updateoldips(save_ip_path,  curr_external_ip, curr_local_ip)
 
     else:
         print ("Current IP = Old IP.  No need to send email.")
