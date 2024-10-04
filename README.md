@@ -101,15 +101,18 @@ If you use **2-Step Verification** with Gmail then you'll need configure your Gm
 
 
 ## Server List
+
 The server list is hosted in this github repo as `servers.json`.  Locally, there
 is a cached copy kept which will be re-retrieved from github every 90 days.
 
 ## References
+
 The original ipgetter.py code came from https://github.com/phoemur/ipgetter.
 However that repo is gone now.  This repo contains an updated copy of the
 ipgetter.py file that has been modified to further support ipwatch.
 
 ## Thanks
+
 1. Thanks to TheFlyingBadger for adding in support for the GitHub hosted servers.json file.
 2. Thanks to pjuster for providing info on Gmail 2-Step Verification.
 3. Thanks to carolmanderson for adding in support for monitoring local IP.
