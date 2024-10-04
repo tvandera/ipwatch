@@ -195,6 +195,8 @@ class IPgetter:
         print("IP's :", Counter(resultdict.values()))
         print("Full result: ", resultdict)
 
+        valid_ips = set(r for r in resultdict.values() if r != '')
+        assert(len(valid_ips) == 1)
 
 if __name__ == "__main__":
     import argparse
