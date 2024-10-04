@@ -63,11 +63,10 @@ class IPgetter:
     """
 
     def __init__(self):
-        JSON_FILENAME = 'serverCache.json'
+        servercache_file = 'serverCache.json'
         now           = datetime.now()
-        currentTS     = datetime.timestamp(now)
-        theList       = None
-        if os.path.isfile(JSON_FILENAME):
+        server_list   = None
+        if os.path.isfile(servercache_file):
             try:
                 with open(servercache_file) as infile:
                     server_list = json.load(infile)

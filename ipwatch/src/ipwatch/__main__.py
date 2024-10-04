@@ -49,11 +49,19 @@ def isipaddr(ipstr):
     return pattern.match(ipstr)
 
 
+def isinblacklist(ip, blacklist):
+    blacklist = blacklist.split(",")
+    for black_ip in blacklist:
+        if fnmatch(ip, black_ip):
+            logging.warning( "GetIP: Bad IP (in Blacklist): %s in %s", ip, black_ip,)
+            return True
+
+    return False
+
 # return the current external IP address
 def getips(try_count, blacklist):
     "Function to return the current, external, IP address"
 
-    blacklist = blacklist.split(",")
 
     # try up to config.try_count servers for an IP
     for counter in range(int(try_count)):
@@ -63,20 +71,11 @@ def getips(try_count, blacklist):
 
         # check to see that it has a ###.###.###.### format
         if not isipaddr(external_ip):
-            logging.warning(
-                "GetIP: Try %d:  Bad IP    (malformed): %s", counter + 1, external_ip
-            )
+            logging.warning( "GetIP: Try %d:  Bad IP    (malformed): %s", counter + 1, external_ip)
             continue
 
-        for black_ip in blacklist:
-            if fnmatch(external_ip, black_ip):
-                logging.warning(
-                    "GetIP: Try %d:  Bad IP (in Blacklist): %s in %s",
-                    counter + 1,
-                    external_ip,
-                    black_ip,
-                )
-                continue
+        if isinblacklist(external_ip, blacklist):
+            continue
 
         logging.warning("GetIP: Try %d: Good IP: %s", counter + 1, external_ip)
         return external_ip, local_ip, server
@@ -163,7 +162,7 @@ def main():
 
     old_external_ip, old_local_ip = getoldips(save_ip_path)
     curr_external_ip, curr_local_ip, server = getips(
-        config.try_count, config.ip_blacklist
+        int(config.try_count), config.ip_blacklist
     )
 
     # check to see if the IP address has changed
