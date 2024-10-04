@@ -47,6 +47,8 @@ __version__ = "0.7"
 def myip():
     return IPgetter().get_ips()
 
+SERVERLIST_URL = "https://raw.githubusercontent.com/begleysm/ipwatch/master/servers.json"
+
 class IPgetter:
     """
     This class is designed to fetch your external IP address from the internet.
@@ -88,19 +90,17 @@ class IPgetter:
                 "servers" : [],
             }
 
-            operUrl = urllib.urlopen(
-                "https://raw.githubusercontent.com/begleysm/ipwatch/master/servers.json"
-            )
-            if operUrl.getcode() == 200:
-                data = operUrl.read().decode("utf-8")
+            f = urllib.urlopen(SERVERLIST_URL)
+
+            if f.getcode() == 200:
+                data = f.read().decode("utf-8")
                 server_list["servers"] = json.loads(data)
                 with open(servercache_file, "w") as outfile:
                     outfile.write(json.dumps(server_list, indent=4))
             else:
-                raise urllib.error.HTTPError("Error receiving data", operUrl.getcode())
+                raise urllib.error.HTTPError("Error receiving data", f.getcode())
 
         self.server_list = server_list["servers"]
-        server_list = None
 
     def get_externalip(self):
         """
