@@ -1,6 +1,6 @@
 # ipwatch
 
-Sean Begley (begleysm@gmail.com) [https://steamforge.net/wiki](wiki) [https://github.com/begleysm/ipwatch](GitHub)
+Sean Begley (begleysm@gmail.com) [wiki](https://steamforge.net/wiki) [GitHub](https://github.com/begleysm/ipwatch)
 
 2022-04-04
 
