@@ -24,7 +24,7 @@ from configparser import ConfigParser
 from fnmatch import fnmatch
 from pathlib import Path
 from textwrap import dedent
-from typing import namedtuple
+import dataclasses
 
 from . import ipgetter
 
@@ -32,16 +32,35 @@ from . import ipgetter
 ### CLASSES ####
 ################
 
-SCRIPTDIR = Path(__file__).parent
+DEFAULT_TRY = 10
+DEFAULT_BLACKLIST = "192.168.*.*,10.*.*.*"
 
+@dataclasses.dataclass
+class Config:
+    email: str
+    machine: str
+    try_count: int = DEFAULT_TRY
+    ip_blacklist: str = DEFAULT_BLACKLIST
+    config_file: str = ""
+    write_config_file: str = ""
+    dry_run: bool = False
 
-def readconfig(fname):
-    config = ConfigParser()
-    config.read(fname)
-    config = config["DEFAULT"]
-    config = namedtuple("Config", config)
-    return config(**config)
+    @staticmethod
+    def read(fname, **kwargs):
+        logging.info("Reading %s", fname)
+        config = ConfigParser()
+        config.read(fname)
+        config = config["DEFAULT"]
+        values = { **config, **kwargs }
+        return Config(**values)
 
+    def write(self):
+        if not self.write_config_file:
+            return
+
+        with open(self.write_config_file, 'w') as f:
+            values = dataclasses.asdict(self)
+            ConfigParser(values).write(f)
 
 def isipaddr(ipstr):
     """True is ipstr matches x.x.x.x"""
@@ -56,7 +75,7 @@ def getips(try_count, blacklist):
     blacklist = blacklist.split(",")
 
     # try up to config.try_count servers for an IP
-    for counter in range(int(try_count)):
+    for counter in range(try_count):
 
         # get an IP
         external_ip, local_ip, server = ipgetter.myip()
@@ -78,7 +97,7 @@ def getips(try_count, blacklist):
                 )
                 continue
 
-        logging.warning("GetIP: Try %d: Good IP: %s", counter + 1, external_ip)
+        logging.info("GetIP: Try %d: Good IP: %s", counter + 1, external_ip)
         return external_ip, local_ip, server
 
     raise ValueError("Could not get IPs")
@@ -102,6 +121,8 @@ def getoldips(filepath):
 # write the new IP address to file
 def updateoldips(filepath, new_external_ip, new_local_ip):
     "Function to update the old ip address from savefile"
+
+    filepath.parent.mkdir(exist_ok=True, parents=True)
     with open(filepath, "w") as savefile:
         savefile.write(new_external_ip)
         savefile.write("\n")
@@ -115,8 +136,9 @@ def sendmail(
     new_external_ip,
     new_local_ip,
     server,
-    receiver_emails,
+    email,
     machine,
+    dry_run = False,
 ):
     "Function to send an email with the new IP address"
 
@@ -130,9 +152,14 @@ def sendmail(
        The Server queried was {server}"""
     )
 
-    for email in receiver_emails.split(","):
+    emails = email.split(",")
+    subject = f"new ip: {new_external_ip}"
+    dryrun_notice = "[DRYRUN] " if dry_run else ""
+    logging.info("%sSending mail to %s with subject %s:\n%s",dryrun_notice, email, subject, mailbody)
+
+    if not dry_run:
         subprocess.check_output(
-            ["/usr/bin/mail", "-s", f"new ip: {new_external_ip}", f"{email}"],
+            ["/usr/bin/mail", "-s", subject, ] + emails,
             input=mailbody,
             text=True,
         )
@@ -143,23 +170,43 @@ def sendmail(
 ################
 
 
+logging.basicConfig(level=logging.DEBUG)
+
 def main():
     # parse arguments
     import argparse
+    import platformdirs
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--config", dest="config_file", default=SCRIPTDIR / "config.txt"
+        "--config-file",
+        dest="config_file",
+        default=platformdirs.user_config_path("ipwatch") / "config.txt",
+        help="read email-adresses, machine name, blacklist and try count from this file",
     )
+
+    parser.add_argument("--write-config-file",  help="write config file")
+
+    machine_arg = parser.add_argument("--machine",  help="use this as the machine name")
+    email_arg  =parser.add_argument("--email", help="receiver email-adress")
+    parser.add_argument("--try-count", type=int, default = DEFAULT_TRY, help="configure try count")
+    parser.add_argument("--ip-blacklist", default = DEFAULT_BLACKLIST, help="configure black list")
+
+    parser.add_argument("--dry-run", action="store_true", help="do not send email")
+
     args = parser.parse_args()
 
     # read config file
-    print("Reading ", args.config_file)
-    config = readconfig(args.config_file)
+    config = Config.read(args.config_file, **vars(args))
 
-    save_ip_path = Path(config.save_ip_path)
-    if not save_ip_path.is_absolute():
-        save_ip_path = SCRIPTDIR / save_ip_path
+    if not config.machine:
+        raise argparse.ArgumentError(argument=machine_arg, message=f"Must specify machine name, either in config file ({args.config_file}), or on the command line")
+    if not config.email:
+        raise argparse.ArgumentError(argument=email_arg, message=f"Must specify email address(es), either in config file ({args.config_file}), or on the command line")
+
+    config.write()
+
+    save_ip_path = platformdirs.user_cache_path("ipwatch") / "saved_ip.txt"
 
     old_external_ip, old_local_ip = getoldips(save_ip_path)
     curr_external_ip, curr_local_ip, server = getips(
@@ -169,7 +216,7 @@ def main():
     # check to see if the IP address has changed
     if (curr_external_ip != old_external_ip) or (curr_local_ip != old_local_ip):
         # send email
-        print("Current IP differs from old IP.")
+        logging.info("Current IP differs from old IP.")
         sendmail(
             old_external_ip,
             old_local_ip,
@@ -178,13 +225,14 @@ def main():
             server,
             config.receiver_email,
             config.machine,
+            dry_run = args.dry_run,
         )
 
         # updatefile
         updateoldips(save_ip_path, curr_external_ip, curr_local_ip)
 
     else:
-        print("Current IP = Old IP.  No need to send email.")
+        logging.info("Current IP = Old IP.  No need to send email.")
 
 
 if __name__ == "__main__":
