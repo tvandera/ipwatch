@@ -32,35 +32,57 @@ from . import ipgetter
 ### CLASSES ####
 ################
 
-DEFAULT_TRY = 10
+DEFAULT_TRY = "10"
 DEFAULT_BLACKLIST = "192.168.*.*,10.*.*.*"
+
+EXAMPLE_CONFIG = dedent("""
+    [DEFAULT]
+    receiver_email=jimmy@gmail.com
+    machine=Home NAS
+    try_count=10
+    ip_blacklist=192.168.*.*,10.*.*.*""")
+
+class InvalidConfigError(ValueError):
+    def __init__(self, fname = None, missing = None):
+        msg = "\n\nInvalid config file\n"
+        if fname:
+            msg += f"Could not read this file: {fname}\nPlease create it. "
+
+        if missing:
+            msg += f"Missing field: {missing}\n"
+
+        msg += f"Example config file content:\n{EXAMPLE_CONFIG}"
+
+        return super().__init__(msg)
+
 
 @dataclasses.dataclass
 class Config:
-    email: str
+    receiver_email: str
     machine: str
     try_count: int = DEFAULT_TRY
     ip_blacklist: str = DEFAULT_BLACKLIST
     config_file: str = ""
-    write_config_file: str = ""
     dry_run: bool = False
 
     @staticmethod
-    def read(fname, **kwargs):
+    def read(fname):
         logging.info("Reading %s", fname)
         config = ConfigParser()
-        config.read(fname)
+        read_ok = config.read(fname)
+
+        if read_ok != [ fname ]:
+            raise InvalidConfigError(fname = fname)
+
         config = config["DEFAULT"]
-        values = { **config, **kwargs }
-        return Config(**values)
 
-    def write(self):
-        if not self.write_config_file:
-            return
+        if "machine" not in config:
+            raise InvalidConfigError(field = "machine")
 
-        with open(self.write_config_file, 'w') as f:
-            values = dataclasses.asdict(self)
-            ConfigParser(values).write(f)
+        if "receiver_email" not in config:
+            raise InvalidConfigError(field = "receiver_email")
+
+        return Config(**config)
 
 def isipaddr(ipstr):
     """True is ipstr matches x.x.x.x"""
@@ -68,11 +90,19 @@ def isipaddr(ipstr):
     return pattern.match(ipstr)
 
 
+def isinblacklist(ip, blacklist):
+    blacklist = blacklist.split(",")
+    for black_ip in blacklist:
+        if fnmatch(ip, black_ip):
+            logging.warning( "GetIP: Bad IP (in Blacklist): %s in %s", ip, black_ip,)
+            return True
+
+    return False
+
 # return the current external IP address
 def getips(try_count, blacklist):
     "Function to return the current, external, IP address"
 
-    blacklist = blacklist.split(",")
 
     # try up to config.try_count servers for an IP
     for counter in range(try_count):
@@ -82,20 +112,11 @@ def getips(try_count, blacklist):
 
         # check to see that it has a ###.###.###.### format
         if not isipaddr(external_ip):
-            logging.warning(
-                "GetIP: Try %d:  Bad IP    (malformed): %s", counter + 1, external_ip
-            )
+            logging.warning( "GetIP: Try %d:  Bad IP    (malformed): %s", counter + 1, external_ip)
             continue
 
-        for black_ip in blacklist:
-            if fnmatch(external_ip, black_ip):
-                logging.warning(
-                    "GetIP: Try %d:  Bad IP (in Blacklist): %s in %s",
-                    counter + 1,
-                    external_ip,
-                    black_ip,
-                )
-                continue
+        if isinblacklist(external_ip, blacklist):
+            continue
 
         logging.info("GetIP: Try %d: Good IP: %s", counter + 1, external_ip)
         return external_ip, local_ip, server
@@ -185,32 +206,19 @@ def main():
         help="read email-adresses, machine name, blacklist and try count from this file",
     )
 
-    parser.add_argument("--write-config-file",  help="write config file")
-
-    machine_arg = parser.add_argument("--machine",  help="use this as the machine name")
-    email_arg  =parser.add_argument("--email", help="receiver email-adress")
-    parser.add_argument("--try-count", type=int, default = DEFAULT_TRY, help="configure try count")
-    parser.add_argument("--ip-blacklist", default = DEFAULT_BLACKLIST, help="configure black list")
-
     parser.add_argument("--dry-run", action="store_true", help="do not send email")
 
     args = parser.parse_args()
 
     # read config file
-    config = Config.read(args.config_file, **vars(args))
-
-    if not config.machine:
-        raise argparse.ArgumentError(argument=machine_arg, message=f"Must specify machine name, either in config file ({args.config_file}), or on the command line")
-    if not config.email:
-        raise argparse.ArgumentError(argument=email_arg, message=f"Must specify email address(es), either in config file ({args.config_file}), or on the command line")
-
-    config.write()
+    config = Config.read(args.config_file)
+    print(f"{config=}")
 
     save_ip_path = platformdirs.user_cache_path("ipwatch") / "saved_ip.txt"
 
     old_external_ip, old_local_ip = getoldips(save_ip_path)
     curr_external_ip, curr_local_ip, server = getips(
-        config.try_count, config.ip_blacklist
+        int(config.try_count), config.ip_blacklist
     )
 
     # check to see if the IP address has changed
