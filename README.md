@@ -47,6 +47,7 @@ pip install
 ```
 
 Copy `example_config.txt` to `config.txt` by running
+
 ```bash
 sudo cp example_config.txt /opt/ipwatch/config.txt
 ```
@@ -105,6 +106,7 @@ config file is in the same location.  You can access root's crontab by running
 sudo su
 crontab -e
 ```
+
 Below is an example crontab entry to run ipwatch once per hour.
 
 ```bash
