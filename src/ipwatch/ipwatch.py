@@ -37,10 +37,11 @@ DEFAULT_BLACKLIST = "192.168.*.*,10.*.*.*"
 
 EXAMPLE_CONFIG = dedent("""
     [DEFAULT]
-    receiver_email=jimmy@gmail.com
-    machine=Home NAS
-    try_count=10
-    ip_blacklist=192.168.*.*,10.*.*.*""")
+    receiver_email=jimmy@gmail.com # destination email address
+    machine=Home NAS # description of this machine
+    try_count=10 # number of tries to detect external ip
+    ip_blacklist=192.168.*.*,10.*.*.* # external ips that are not allowed
+""")
 
 class InvalidConfigError(ValueError):
     def __init__(self, fname = None, missing = None):
@@ -198,11 +199,26 @@ def main():
     import argparse
     import platformdirs
 
-    parser = argparse.ArgumentParser()
+
+    default_config_file = platformdirs.user_config_path("ipwatch") / "config.txt"
+    parser = argparse.ArgumentParser(description=f"""
+This program gets for your external IP address
+checks it against your "saved" IP address and,
+if a difference is found, emails you the new IP.
+This is useful for servers at residential locations
+whose IP address may change periodically due to actions
+by the ISP.
+
+To be able to use it, create a config file
+\"{default_config_file.absolute()}\"
+with the folllowing info:\n{EXAMPLE_CONFIG}
+""",
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+)
+
     parser.add_argument(
         "--config-file",
-        dest="config_file",
-        default=platformdirs.user_config_path("ipwatch") / "config.txt",
+        default=default_config_file,
         help="read email-adresses, machine name, blacklist and try count from this file",
     )
 
