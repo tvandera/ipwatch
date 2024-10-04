@@ -18,6 +18,8 @@ authors = [
   { name = "Tom Vander Aa", email = "tom.vanderaa@gmail.com" },
 ]
 
+dependencies = ["platformdirs"]
+
 [project.urls]
 Documentation = "https://github.com/begleysm/ipwatch#readme"
 Issues = "https://github.com/begleysm/ipwatch/issues"
