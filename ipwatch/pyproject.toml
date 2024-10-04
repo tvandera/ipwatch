@@ -18,12 +18,15 @@ authors = [
   { name = "Tom Vander Aa", email = "vanderaa@imec.be" },
 ]
 
-dependencies = []
+dependencies = ["platformdirs"]
 
 [project.urls]
 Documentation = "https://github.com/begleysm/ipwatch#readme"
 Issues = "https://github.com/begleysm/ipwatch/issues"
 Source = "https://github.com/begleysm/ipwatch"
+
+[project.scripts]
+ipwatch = "ipwatch:main"
 
 [tool.hatch.version]
 path = "src/ipwatch/__about__.py"
