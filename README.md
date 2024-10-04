@@ -11,16 +11,15 @@ your "saved" IP addresses and, if a difference is found, emails you the new
 IP's. This is useful for servers at residential locations whose IP address may
 change periodically due to actions by the ISP.
 
-
 ## Usage
 
- `./ipwatch.py config.txt`
-
-A `config.txt` file is needed. See below.
+ `./ipwatch.py --help` will give you info on how to run ipwatch,
+ where to create a config file, and an example content for this file.
 
 ## Installation
 
 ### Debian based Linux systems
+
 Install python3, git, & nano by running
 
 ```bash
@@ -28,11 +27,13 @@ sudo apt install python3 git nano mailutils ssmtp
 ```
 
 Clone the ipwatch repo by running
+
 ```bash
 sudo git clone https://github.com/begleysm/ipwatch /opt/ipwatch
 ```
 
 Copy `example_config.txt` to `config.txt` by running
+
 ```bash
 sudo cp /opt/ipwatch/example_config.txt /opt/ipwatch/config.txt
 ```
@@ -81,6 +82,7 @@ config file is in the same location.  You can access root's crontab by running
 sudo su
 crontab -e
 ```
+
 Below is an example crontab entry to run ipwatch once per hour.
 
 ```bash
