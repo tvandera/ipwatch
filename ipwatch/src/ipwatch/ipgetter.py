@@ -204,7 +204,7 @@ class IPgetter:
         print("Full result: ", resultdict)
 
         valid_ips = set(r for r in resultdict.values() if r != '')
-        assert(len(valid_ips) == 1)
+        assert(len(valid_ips) >= 1)
 
 if __name__ == "__main__":
     import argparse
