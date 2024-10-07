@@ -32,7 +32,7 @@ from . import ipgetter
 ### CLASSES ####
 ################
 
-DEFAULT_TRY = "10"
+DEFAULT_TRY = 10
 DEFAULT_BLACKLIST = "192.168.*.*,10.*.*.*"
 
 EXAMPLE_CONFIG = dedent("""
@@ -44,6 +44,9 @@ EXAMPLE_CONFIG = dedent("""
 
 class InvalidConfigError(ValueError):
     def __init__(self, fname = None, missing = None):
+        self.fname = fname
+        self.missing = missing
+
         msg = "\n\nInvalid config file\n"
         if fname:
             msg += f"Could not read this file: {fname}\nPlease create it. "
@@ -81,12 +84,19 @@ class Config:
         config = config["DEFAULT"]
 
         if "machine" not in config:
-            raise InvalidConfigError(field = "machine")
+            raise InvalidConfigError(missing = "machine")
 
         if "receiver_email" not in config:
-            raise InvalidConfigError(field = "receiver_email")
+            raise InvalidConfigError(missing = "receiver_email")
 
-        return Config(**config)
+        return Config(
+            receiver_email= config.get("receiver_email"),
+            machine= config.get("machine"),
+            try_count=config.getint("try_count", DEFAULT_TRY),
+            ip_blacklist=config.get("ip_blacklist", DEFAULT_BLACKLIST),
+            config_file=fname,
+            dry_run=config.getboolean("dry_run"),
+        )
 
 def isipaddr(ipstr):
     """True is ipstr matches x.x.x.x"""
