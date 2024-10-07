@@ -1,4 +1,3 @@
-[DEFAULT]
 receiver_email=jimmy@gmail.com
 machine=Home NAS
 try_count=10
