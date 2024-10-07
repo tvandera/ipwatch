@@ -195,8 +195,6 @@ def sendmail(
 ################
 
 
-logging.basicConfig(level=logging.DEBUG)
-
 def main():
     # parse arguments
     import argparse
@@ -224,14 +222,15 @@ with the folllowing info:\n{EXAMPLE_CONFIG}
         default=default_config_file,
         help="read email-adresses, machine name, blacklist and try count from this file",
     )
-
     parser.add_argument("--dry-run", action="store_true", help="do not send email")
-
+    parser.add_argument("--verbose", help="increase logging verbosity", action="store_const", const=logging.INFO)
+    parser.add_argument("--force", help="always report external ip, even if unchanged", action="store_true")
     args = parser.parse_args()
+
+    logging.basicConfig(level=args.verbose)
 
     # read config file
     config = Config.read(args.config_file)
-    print(f"{config=}")
 
     save_ip_path = platformdirs.user_cache_path("ipwatch") / "saved_ip.txt"
 
@@ -241,7 +240,9 @@ with the folllowing info:\n{EXAMPLE_CONFIG}
     )
 
     # check to see if the IP address has changed
-    if (curr_external_ip != old_external_ip) or (curr_local_ip != old_local_ip):
+    if (curr_external_ip != old_external_ip) or \
+       (curr_local_ip != old_local_ip) or \
+        args.force:
         # send email
         logging.info("Current IP differs from old IP.")
         sendmail(
