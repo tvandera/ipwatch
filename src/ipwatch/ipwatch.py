@@ -36,7 +36,6 @@ DEFAULT_TRY = "10"
 DEFAULT_BLACKLIST = "192.168.*.*,10.*.*.*"
 
 EXAMPLE_CONFIG = dedent("""
-    [DEFAULT]
     receiver_email=jimmy@gmail.com # destination email address
     machine=Home NAS # description of this machine
     try_count=10 # number of tries to detect external ip
@@ -69,12 +68,16 @@ class Config:
     @staticmethod
     def read(fname):
         logging.info("Reading %s", fname)
-        config = ConfigParser()
-        read_ok = config.read(fname)
 
-        if read_ok != [ fname ]:
+        try:
+            with open(fname, "r") as f:
+                content = f.read()
+
+        except FileNotFoundError:
             raise InvalidConfigError(fname = fname)
 
+        config = ConfigParser()
+        config.read_string("[DEFAULT]\n" + content)
         config = config["DEFAULT"]
 
         if "machine" not in config:

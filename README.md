@@ -84,7 +84,6 @@ ipwatch [config]
 ipwatch uses a config file to define how to send an email.  An example and description is below.  A similar config file is in the repo as example_config.txt.  You should copy it by running something like `sudo cp example_config.txt config.txt` and then modify `config.txt`.
 
 ```dosini
-[DEFAULT]
 # comma delimited list of the the email addresses of the recipients
 receiver_email=tomreceiver@gmail.com, bobreceiver@gmail.com
 #informative name of the machine
