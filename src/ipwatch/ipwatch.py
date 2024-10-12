@@ -98,6 +98,17 @@ class Config:
             dry_run=config.getboolean("dry_run"),
         )
 
+    def merge(self, args):
+        for field in dataclasses.fields(self):
+            if not hasattr(args, field.name):
+                continue
+
+            value = getattr(args, field.name)
+            if value is not None:
+                setattr(self, field.name, value)
+
+        return self
+
 def isipaddr(ipstr):
     """True is ipstr matches x.x.x.x"""
     pattern = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
@@ -232,6 +243,13 @@ with the folllowing info:\n{EXAMPLE_CONFIG}
         default=default_config_file,
         help="read email-adresses, machine name, blacklist and try count from this file",
     )
+
+    parser.add_argument( "--receiver-email", help="receiver email-adress")
+    parser.add_argument( "--machine", help="machine name")
+    parser.add_argument( "--try-count", type=int, help="try count")
+    parser.add_argument( "--ip-blacklist", help="ip blacklist")
+
+
     parser.add_argument("--dry-run", action="store_true", help="do not send email")
     parser.add_argument("--verbose", help="increase logging verbosity", action="store_const", const=logging.INFO)
     parser.add_argument("--force", help="always report external ip, even if unchanged", action="store_true")
@@ -240,7 +258,7 @@ with the folllowing info:\n{EXAMPLE_CONFIG}
     logging.basicConfig(level=args.verbose)
 
     # read config file
-    config = Config.read(args.config_file)
+    config = Config.read(args.config_file).merge(args)
 
     save_ip_path = platformdirs.user_cache_path("ipwatch") / "saved_ip.txt"
 
