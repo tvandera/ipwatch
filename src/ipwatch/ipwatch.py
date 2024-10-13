@@ -25,6 +25,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 from textwrap import dedent
 import dataclasses
+import time
 
 from . import ipgetter
 
@@ -250,6 +251,7 @@ with the folllowing info:\n{EXAMPLE_CONFIG}
     parser.add_argument( "--ip-blacklist", help="ip blacklist")
 
 
+    parser.add_argument("--repeat", type=int, default=-1, help="repeat every N seconds")
     parser.add_argument("--dry-run", action="store_true", help="do not send email")
     parser.add_argument("--verbose", help="increase logging verbosity", action="store_const", const=logging.INFO)
     parser.add_argument("--force", help="always report external ip, even if unchanged", action="store_true")
@@ -262,33 +264,39 @@ with the folllowing info:\n{EXAMPLE_CONFIG}
 
     save_ip_path = platformdirs.user_cache_path("ipwatch") / "saved_ip.txt"
 
-    old_external_ip, old_local_ip = getoldips(save_ip_path)
-    curr_external_ip, curr_local_ip, server = getips(
-        int(config.try_count), config.ip_blacklist
-    )
-
-    # check to see if the IP address has changed
-    if (curr_external_ip != old_external_ip) or \
-       (curr_local_ip != old_local_ip) or \
-        args.force:
-        # send email
-        logging.info("Current IP differs from old IP.")
-        sendmail(
-            old_external_ip,
-            old_local_ip,
-            curr_external_ip,
-            curr_local_ip,
-            server,
-            config.receiver_email,
-            config.machine,
-            dry_run = args.dry_run,
+    while True:
+        old_external_ip, old_local_ip = getoldips(save_ip_path)
+        curr_external_ip, curr_local_ip, server = getips(
+            int(config.try_count), config.ip_blacklist
         )
 
-        # updatefile
-        updateoldips(save_ip_path, curr_external_ip, curr_local_ip)
+        # check to see if the IP address has changed
+        if (curr_external_ip != old_external_ip) or \
+        (curr_local_ip != old_local_ip) or \
+            args.force:
+            # send email
+            logging.info("Current IP differs from old IP.")
+            sendmail(
+                old_external_ip,
+                old_local_ip,
+                curr_external_ip,
+                curr_local_ip,
+                server,
+                config.receiver_email,
+                config.machine,
+                dry_run = args.dry_run,
+            )
 
-    else:
-        logging.info("Current IP = Old IP.  No need to send email.")
+            # updatefile
+            updateoldips(save_ip_path, curr_external_ip, curr_local_ip)
+
+        else:
+            logging.info("Current IP = Old IP.  No need to send email.")
+
+        if args.repeat <= 0:
+            break
+        else:
+            time.sleep(args.repeat)
 
 
 if __name__ == "__main__":
