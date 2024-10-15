@@ -9,7 +9,7 @@ description = """This program gets your external & internal IP addresses, checks
 your "saved" IP addresses and, if a difference is found, emails you the new
 IP's. This is useful for servers at residential locations whose IP address may
 change periodically due to actions by the ISP."""
-readme = "README.md"
+readme = "../README.md"
 requires-python = ">=3.8"
 license = "MIT"
 keywords = []
