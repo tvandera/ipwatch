@@ -52,10 +52,19 @@ def read_config(fname):
     logging.info("Reading %s", fname)
     config = ConfigParser()
     config.read_string("[DEFAULT]\n" + open(fname, "r").read())
-    return config["DEFAULT"]
+    config = config["DEFAULT"]
+    return {
+        "receiver_email": config.get("receiver_email"),
+        "machine": config.get("machine"),
+        "try_count": config.getint("try_count", DEFAULT_TRY),
+        "ip_blacklist": config.get("ip_blacklist", DEFAULT_BLACKLIST),
+        "config_file": fname,
+        "dry_run": config.getboolean("dry_run"),
+    }
+
 
 def isipaddr(ipstr):
-    """True is ipstr matches x.x.x.x"""
+    """True if ipstr matches x.x.x.x"""
     pattern = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
     return pattern.match(ipstr)
 
