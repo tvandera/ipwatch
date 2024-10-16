@@ -58,7 +58,7 @@
 		   after = [ "network.target" ];
 		   description = "Start ipwatch IP watcher";
 		   serviceConfig = {
-			   ExecStart = ''${ipwatch}/bin/ipwatch --repeat ${repeat} --machine ${machine} --receiver-email ${email} --blacklist ${blacklist} --try-count ${try}'';
+			   ExecStart = ''${ipwatch}/bin/ipwatch --repeat ${cfg.repeat} --machine ${cfg.machine} --receiver-email ${cfg.email} --blacklist ${cfg.blacklist} --try-count ${cfg.try}'';
 		   };
 	   };
 
