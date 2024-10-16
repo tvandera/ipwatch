@@ -19,5 +19,5 @@ buildPythonPackage {
     platformdirs
   ];
 
-  src = ./python;
+  src = ./..;
 }
