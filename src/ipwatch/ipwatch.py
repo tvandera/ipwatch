@@ -29,7 +29,36 @@ import time
 
 from . import ipgetter
 
-def read_config(fname, parser, args):
+def make_parser():
+    import argparse
+
+    parser = argparse.ArgumentParser(description=f"""
+This program gets for your external IP address
+checks it against your "saved" IP address and,
+if a difference is found, emails you the new IP.
+This is useful for servers at residential locations
+whose IP address may change periodically due to actions
+by the ISP.
+""",
+)
+
+    parser.add_argument(
+        "--config-file",
+        help="read email-adresses, machine name, blacklist and try count from this file",
+    )
+
+    parser.add_argument("--receiver-email", default="root", help="receiver email-address")
+    parser.add_argument("--machine", default=platform.node(), help="machine name (e.g. 'Home NAS')")
+    parser.add_argument("--try-count", type=int, default=10, help="try count")
+    parser.add_argument("--ip-blacklist", default="192.168.*.*,10.*.*.*", help="ip blacklist")
+    parser.add_argument("--repeat", type=int, default=0, help="when >0, repeat every N seconds")
+    parser.add_argument("--dry-run", action="store_true", help="do not send email")
+    parser.add_argument("--verbose", help="increase logging verbosity", action="store_const", const=logging.INFO)
+    parser.add_argument("--force", help="always report external ip, even if unchanged", action="store_true")
+
+    return parser
+
+def read_config(fname, parser):
     logging.info("Reading %s", fname)
     config = ConfigParser()
     config.read_string("[DEFAULT]\n" + open(fname, "r").read())
@@ -152,41 +181,17 @@ def sendmail(
 
 def main():
     # parse arguments
-    import argparse
     import platformdirs
-
 
     default_config_file = platformdirs.user_config_path("ipwatch") / "config.txt"
 
-    parser = argparse.ArgumentParser(description=f"""
-This program gets for your external IP address
-checks it against your "saved" IP address and,
-if a difference is found, emails you the new IP.
-This is useful for servers at residential locations
-whose IP address may change periodically due to actions
-by the ISP.
-""",
-)
-
-    parser.add_argument(
-        "--config-file",
-        help="read email-adresses, machine name, blacklist and try count from this file",
-    )
-
-    parser.add_argument("--receiver-email", default="root", help="receiver email-address")
-    parser.add_argument("--machine", default=platform.node(), help="machine name (e.g. 'Home NAS')")
-    parser.add_argument("--try-count", type=int, default=10, help="try count")
-    parser.add_argument("--ip-blacklist", default="192.168.*.*,10.*.*.*", help="ip blacklist")
-    parser.add_argument("--repeat", type=int, default=0, help="when >0, repeat every N seconds")
-    parser.add_argument("--dry-run", action="store_true", help="do not send email")
-    parser.add_argument("--verbose", help="increase logging verbosity", action="store_const", const=logging.INFO)
-    parser.add_argument("--force", help="always report external ip, even if unchanged", action="store_true")
+    parser = make_parser()
 
     args = parser.parse_args()
     if args.config_file is not None:
-        parser.set_defaults(**read_config(args.config_file, parser, args))
+        parser.set_defaults(**read_config(args.config_file, parser))
     elif default_config_file.exists():
-        parser.set_defaults(**read_config(default_config_file, parser, args))
+        parser.set_defaults(**read_config(default_config_file, parser))
     args = parser.parse_args()
 
     logging.basicConfig(level=args.verbose)
