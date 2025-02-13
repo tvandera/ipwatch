@@ -29,6 +29,7 @@ Updated by Sean Begley for the ipwatch project (https://github.com/begleysm/ipwa
 """
 
 import http.cookiejar as cjar
+import importlib.resources
 import json
 import os
 import random
@@ -55,7 +56,11 @@ class ServerList:
         try:
             self.server_list = self.from_cache()
         except CacheExpired:
-            self.server_list = self.from_file(file) if file else self.download(url)
+            if file:
+                self.server_list = self.from_file(file)
+            else:
+                self.server_list = self.builtin()
+
             self.to_cache()
 
     def __iter__(self):
@@ -63,6 +68,13 @@ class ServerList:
 
     def __len__(self):
          return len(self.server_list)
+
+    def builtin(self):
+        from . import data
+        builtin = importlib.resources.files(data) / 'servers.json'
+        with builtin.open("rt") as f:
+            data = f.read()
+            return json.loads(data)
 
     def download(self, url):
         with urllib.urlopen(url) as f:
