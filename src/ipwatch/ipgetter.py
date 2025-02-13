@@ -63,6 +63,9 @@ class ServerList:
 
             self.to_cache()
 
+    def __getitem__(self, index):
+        return self.server_list[index]
+
     def __iter__(self):
         return iter(self.server_list)
 
