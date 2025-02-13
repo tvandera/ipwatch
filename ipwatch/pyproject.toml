@@ -15,7 +15,7 @@ license = "MIT"
 keywords = []
 authors = [
   { name = "Sean Begley", email = "begleysm@gmail.com" },
-  { name = "Tom Vander Aa", email = "vanderaa@imec.be" },
+  { name = "Tom Vander Aa", email = "tom.vanderaa@gmail.com" },
 ]
 
 dependencies = ["platformdirs"]
