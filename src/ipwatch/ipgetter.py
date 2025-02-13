@@ -90,6 +90,8 @@ class ServerList:
         now = datetime.now()
         current_ts = datetime.timestamp(now)
         servercache_file = platformdirs.user_cache_path() / "serverCache.json"
+
+        cache_content = None
         if os.path.isfile(servercache_file):
             try:
                 with open(servercache_file) as infile:
