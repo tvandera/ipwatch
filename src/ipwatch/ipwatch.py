@@ -79,11 +79,11 @@ def isipaddr(ipstr):
     return pattern.match(ipstr)
 
 
-def isinblacklist(ip, blacklist):
+def isinblacklist(ip, blacklist, server = '?'):
     blacklist = blacklist.split(",")
     for black_ip in blacklist:
         if fnmatch(ip, black_ip):
-            logging.warning( "GetIP: Bad IP (in Blacklist): %s in %s", ip, black_ip,)
+            logging.warning( "GetIP from %s: Bad IP (in Blacklist): %s in %s", server, ip, black_ip,)
             return True
 
     return False
@@ -103,7 +103,7 @@ def getips(try_count, blacklist):
             logging.warning( "GetIP: Try %d:  Bad IP    (malformed): %s", counter + 1, external_ip)
             continue
 
-        if isinblacklist(external_ip, blacklist):
+        if isinblacklist(external_ip, blacklist, server=server):
             continue
 
         logging.info("GetIP: Try %d: Good IP: %s", counter + 1, external_ip)
