@@ -28,3 +28,7 @@ jobs:
         run: |
           python -m pip install pytest
           pytest -v
+
+      - name: Test ipwatch cmd
+        run: |
+          ipwatch --dry-run --repeat 0 --verbose --force
