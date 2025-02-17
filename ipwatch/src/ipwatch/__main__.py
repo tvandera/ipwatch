@@ -130,11 +130,12 @@ def sendmail(
     )
 
     for email in receiver_emails.split(","):
-        subprocess.check_output(
-            ["/usr/bin/mail", "-s", f"new ip: {new_external_ip}", f"{email}"],
-            input=mailbody,
-            text=True,
-        )
+        if email:
+            subprocess.check_output(
+                ["/usr/bin/mail", "-s", f"new ip: {new_external_ip}", f"{email}"],
+                input=mailbody,
+                text=True,
+            )
 
 
 ################
