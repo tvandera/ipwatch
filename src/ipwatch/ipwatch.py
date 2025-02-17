@@ -232,7 +232,7 @@ def updateoldips(filepath,  new_external_ip, new_local_ip):
     savefile.close()
 
 #send mail with new IP address
-def sendmail(old_exernal_ip, old_local_ip, new_external_ip, new_local_ip, server, sender,
+def sendmail(old_external_ip, old_local_ip, new_external_ip, new_local_ip, server, sender,
              sender_email, receivers, receiver_emails, username, password, subject,  machine,  smtp_addr):
     "Function to send an email with the new IP address"
 
