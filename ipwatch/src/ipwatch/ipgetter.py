@@ -65,6 +65,7 @@ class IPgetter:
     def __init__(self):
         servercache_file = 'serverCache.json'
         now           = datetime.now()
+        current_ts    = datetime.timestamp(now)
         server_list   = None
         if os.path.isfile(servercache_file):
             try:
