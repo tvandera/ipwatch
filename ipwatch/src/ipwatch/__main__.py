@@ -24,7 +24,7 @@ from configparser import ConfigParser
 from fnmatch import fnmatch
 from pathlib import Path
 from textwrap import dedent
-from typing import namedtuple
+from collections import namedtuple
 
 from . import ipgetter
 
@@ -39,8 +39,8 @@ def readconfig(fname):
     config = ConfigParser()
     config.read(fname)
     config = config["DEFAULT"]
-    config = namedtuple("Config", config)
-    return config(**config)
+    Config = namedtuple("Config", config)
+    return Config(**config)
 
 
 def isipaddr(ipstr):
