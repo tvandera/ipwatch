@@ -27,6 +27,7 @@ Source = "https://github.com/begleysm/ipwatch"
 
 [project.scripts]
 ipwatch = "ipwatch:main"
+ipget = "ipwatch.ipgetter:main"
 
 [tool.hatch.version]
 path = "src/ipwatch/__about__.py"

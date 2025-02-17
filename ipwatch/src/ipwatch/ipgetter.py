@@ -207,7 +207,7 @@ class IPgetter:
         valid_ips = set(r for r in resultdict.values() if r != '')
         assert(len(valid_ips) >= 1)
 
-if __name__ == "__main__":
+def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--verify", action="store_true", help ="tests the consistency of the servers")
@@ -217,3 +217,6 @@ if __name__ == "__main__":
         IPgetter().test()
     else:
         print(myip())
+
+if __name__ == "__main__":
+    main()
