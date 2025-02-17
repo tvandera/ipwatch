@@ -22,7 +22,8 @@ jobs:
           python -m pip install --upgrade pip
 
       - name: Install package
-        run: python -m pip install ipwatch
+        working-directory: ipwatch
+        run: python -m pip install .
 
       - name: Test using pytest
         run: |
