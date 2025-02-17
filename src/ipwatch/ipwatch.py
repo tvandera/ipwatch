@@ -131,6 +131,8 @@ def readconfig(filepath,  configObj):
                     configObj.try_count = value
                 elif (param == "ip_blacklist"):
                     configObj.ip_blacklist = value.split(',')
+                elif (param == "dry_run"):
+                    configObj.dry_run = bool(int(value))
                 else:
                     print ("ERROR: unexpected line found in config file: %s" % line)
                     configfile.close()
@@ -233,7 +235,8 @@ def updateoldips(filepath,  new_external_ip, new_local_ip):
 
 #send mail with new IP address
 def sendmail(old_external_ip, old_local_ip, new_external_ip, new_local_ip, server, sender,
-             sender_email, receivers, receiver_emails, username, password, subject,  machine,  smtp_addr):
+             sender_email, receivers, receiver_emails, username, password, subject,  machine,  smtp_addr,
+             dry_run = False):
     "Function to send an email with the new IP address"
 
     messages = [None]*len(receiver_emails)
@@ -255,7 +258,6 @@ The IP address of """ + machine + """ has changed:\nOld external IP = """ + old_
                        + old_local_ip + """\r\nNew external IP = """ + new_external_ip + """\r\nNew local IP = """ +
                        new_local_ip + """\r\nThe Server queried was """ + server)
 
-
         #print (messages)
         #print (smtp_addr)
         #print (username)
@@ -263,6 +265,11 @@ The IP address of """ + machine + """ has changed:\nOld external IP = """ + old_
         #print (sender)
         #print (receiver_emails)
         #print (message)
+
+        if dry_run:
+            print("DRY RUN: not sending email to ", receiver_emails)
+            return 0
+
         try:
             smtpObj = smtplib.SMTP(smtp_addr)
             smtpObj.starttls()
@@ -329,7 +336,7 @@ def main():
         if ((curr_external_ip != old_external_ip) or (curr_local_ip != old_local_ip)):
             #send email
             print ("Current IP differs from old IP.")
-            sm_ret = sendmail(old_external_ip, old_local_ip, curr_external_ip, curr_local_ip, server, config.sender, config.sender_email, config.receiver, config.receiver_email, config.sender_username, config.sender_password, config.subject_line,  config.machine,  config.smtp_addr)
+            sm_ret = sendmail(old_external_ip, old_local_ip, curr_external_ip, curr_local_ip, server, config.sender, config.sender_email, config.receiver, config.receiver_email, config.sender_username, config.sender_password, config.subject_line,  config.machine,  config.smtp_addr, config.dry_run)
 
             # only update the file if the email was successfully sent
             if (sm_ret == 0):
