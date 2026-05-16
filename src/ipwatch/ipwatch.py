@@ -50,7 +50,7 @@ by the ISP.
     parser.add_argument("--receiver-email", default="root", help="receiver email-address")
     parser.add_argument("--machine", default=platform.node(), help="machine name (e.g. 'Home NAS')")
     parser.add_argument("--try-count", type=int, default=10, help="try count")
-    parser.add_argument("--ip-blacklist", default="192.168.*.*,10.*.*.*", help="ip blacklist")
+    parser.add_argument("--ip-blacklist", default=ipgetter.BLACKLIST, help="ip blacklist")
     parser.add_argument("--repeat", type=int, default=0, help="when >0, repeat every N seconds")
     parser.add_argument("--dry-run", action="store_true", help="do not send email")
     parser.add_argument("--verbose", help="increase logging verbosity", action="store_const", const=logging.INFO)
@@ -79,15 +79,6 @@ def isipaddr(ipstr):
     return pattern.match(ipstr)
 
 
-def isinblacklist(ip, blacklist, server = '?'):
-    blacklist = blacklist.split(",")
-    for black_ip in blacklist:
-        if fnmatch(ip, black_ip):
-            logging.warning( "GetIP from %s: Bad IP (in Blacklist): %s in %s", server, ip, black_ip,)
-            return True
-
-    return False
-
 # return the current external IP address
 def getips(try_count, blacklist):
     "Function to return the current, external, IP address"
@@ -103,7 +94,8 @@ def getips(try_count, blacklist):
             logging.warning( "GetIP: Try %d:  Bad IP    (malformed): %s", counter + 1, external_ip)
             continue
 
-        if isinblacklist(external_ip, blacklist, server=server):
+        if ipgetter.isinblacklist(external_ip, blacklist):
+            logging.warning( "GetIP: Try %d:  Bad IP    (blacklisted): %s", counter + 1, external_ip)
             continue
 
         logging.info("GetIP: Try %d: Good IP: %s", counter + 1, external_ip)
