@@ -37,31 +37,29 @@ import re
 import socket
 import ssl
 import urllib.request as urllib
-from datetime import datetime, timedelta
-
-import platformdirs
+from fnmatch import fnmatch
 
 __version__ = "0.7"
+
+
+BLACKLIST = ["192.168.*.*","10.*.*.*","127.*.*.*"]
+
+def isinblacklist(ip, blacklist = BLACKLIST):
+    for black_ip in blacklist:
+        if fnmatch(ip, black_ip):
+            return True
+
+    return False
 
 def myip():
     return IPgetter().get_ips()
 
-class CacheExpired(Exception):
-    pass
-
 class ServerList:
-    URL = "https://raw.githubusercontent.com/begleysm/ipwatch/master/servers.json"
-
-    def __init__(self, file = None, url = URL):
-        try:
-            self.server_list = self.from_cache()
-        except CacheExpired:
-            if file:
-                self.server_list = self.from_file(file)
-            else:
-                self.server_list = self.builtin()
-
-            self.to_cache()
+    def __init__(self, file = None):
+        if file:
+            self.server_list = self.from_file(file)
+        else:
+            self.server_list = self.builtin()
 
     def __getitem__(self, index):
         return self.server_list[index]
@@ -79,58 +77,10 @@ class ServerList:
             data = f.read()
             return json.loads(data)
 
-    def download(self, url):
-        with urllib.urlopen(url) as f:
-            data = f.read().decode("utf-8")
-            return json.loads(data)
-
     def from_file(self, file):
         with open(file) as f:
             data = f.read().decode("utf-8")
             return json.loads(data)
-
-    def to_cache(self):
-        expiry_date = datetime.now() + timedelta(days=90)
-        cache_content = {
-            "expiry" : datetime.timestamp(expiry_date),
-            "expiryDisplay" : expiry_date.strftime("%Y-%m-%dT%H:%M:%S"),
-            "servers" : self.server_list,
-        }
-
-        servercache_file = platformdirs.user_cache_path() / "serverCache.json"
-        with open(servercache_file, "w") as outfile:
-            outfile.write(json.dumps(cache_content, indent=4))
-
-    def from_cache(self):
-        now = datetime.now()
-        current_ts = datetime.timestamp(now)
-        servercache_file = platformdirs.user_cache_path() / "serverCache.json"
-
-        cache_content = None
-        if os.path.isfile(servercache_file):
-            try:
-                with open(servercache_file) as infile:
-                    cache_content = json.load(infile)
-            except:
-                pass
-
-        if (
-            cache_content is None
-            or "expiry" not in cache_content
-            or "expiryDisplay" not in cache_content
-            or "servers" not in cache_content
-            or cache_content["expiry"] is None
-            or cache_content["expiryDisplay"] is None
-            or cache_content["servers"] is None
-            or not isinstance(cache_content["expiry"], float)
-            or len(str(cache_content["expiry"])) == 0
-            or not isinstance(cache_content["servers"], list)
-            or len(cache_content["servers"]) == 0
-            or cache_content["expiry"] < current_ts
-        ):
-            raise CacheExpired()
-
-        return cache_content["servers"]
 
 class IPgetter:
     """
@@ -237,8 +187,11 @@ class IPgetter:
         print("IP's :", Counter(resultdict.values()))
         print("Full result: ", resultdict)
 
+        print("Empty IPs: ", [server for server, ip in resultdict.items() if ip == ''])
+
         valid_ips = set(r for r in resultdict.values() if r != '')
         assert(len(valid_ips) >= 1)
+        print("In blacklist: ", [server for server, ip in resultdict.items() if isinblacklist(ip, BLACKLIST)])
 
 if __name__ == "__main__":
     import argparse
